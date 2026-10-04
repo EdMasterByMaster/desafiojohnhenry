@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Steel Challenge: John Henry vs. Steam Drill</title>
+    <style>
+        :root {
+            --bg-color: #0b0b0e;
+            --panel-bg: #16161a;
+            --text-color: #f1f1f6;
+            --accent-human: #00c875;
+            --accent-machine: #ff4d4d;
+            --warning: #ffb703;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        /* Barra de Controle de Dispositivo (TV vs Celular) */
+        .device-toggle-bar {
+            background: #1f1f27;
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            border: 1px solid #32323b;
+        }
+
+        .device-btn {
+            background: transparent;
+            border: none;
+            color: #a1a1aa;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .device-btn.active {
+            background: var(--warning);
+            color: #121214;
+        }
+
+        /* Container Principal com largura responsiva adaptável */
+        .container {
+            width: 100%;
+            max-width: 1300px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            transition: max-width 0.3s ease;
+        }
+
+        .container.mobile-view {
+            max-width: 420px; /* Simula tela de celular com perfeição */
+            border: 8px solid #27272c;
+            border-radius: 30px;
+            padding: 10px;
+            background: #111;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            color: var(--warning);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        header p {
+            font-size: 0.9rem;
+            color: #a0a0ab;
+        }
+
+        /* Arena de Trilhos Realistas */
+        .railroad-arena {
+            background: linear-gradient(135deg, #18181c, #111115);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+            border: 3px solid #27272c;
+        }
+
+        .arena-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--warning);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .track-row {
+            position: relative;
+            height: 75px;
+            background: #0f0f12;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 2px solid #232329;
+            overflow: visible;
+            display: flex;
+            align-items: center;
+        }
+
+        .rails-bed {
+            position: absolute;
+            top: 0; bottom: 0; left: 15px; right: 15px;
+            background: repeating-linear-gradient(
+                90deg,
+                #2a2218,
+                #2a2218 10px,
+                #121215 10px,
+                #121215 20px
+            );
+            z-index: 1;
+        }
+
+        .rail-line-top, .rail-line-bottom {
+            position: absolute;
+            left: 15px; right: 15px;
+            height: 3px;
+            background: #d4d4d8;
+            z-index: 2;
+        }
+        .rail-line-top { top: 16px; }
+        .rail-line-bottom { bottom: 16px; }
+
+        .finish-gate {
+            position: absolute;
+            right: 20px;
+            top: 0; bottom: 0;
+            width: 5px;
+            background: var(--warning);
+            z-index: 3;
+            box-shadow: 0 0 10px var(--warning);
+        }
+
+        /* Tokens com imagens e animações de ação */
+        .racer-token {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            transition: left 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(22, 22, 26, 0.95);
+            padding: 4px 10px 4px 4px;
+            border-radius: 30px;
+            border: 2px solid #444;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+            white-space: nowrap;
+        }
+
+        .racer-token img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #fff;
+        }
+
+        .racer-token.human-token { border-color: var(--accent-human); }
+        .racer-token.human-token .racer-name { color: var(--accent-human); font-weight: bold; font-size: 0.85rem; }
+
+        .racer-token.machine-token { border-color: var(--accent-machine); }
+        .racer-token.machine-token .racer-name { color: var(--accent-machine); font-weight: bold; font-size: 0.85rem; }
+
+        .racer-score-tag {
+            font-size: 0.75rem;
+            color: #d4d4d8;
+        }
+
+        /* Animação ativa de ação (Martelo / Máquina batendo) */
+        @keyframes actionBump {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.15) rotate(3deg); filter: brightness(1.3); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .racer-token.active-action {
+            animation: actionBump 0.4s ease infinite alternate;
+        }
+
+        /* Placar */
+        .scoreboard-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .score-box {
+            background-color: var(--panel-bg);
+            border-radius: 8px;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 6px solid #555;
+        }
+
+        .score-box.human { border-left-color: var(--accent-human); }
+        .score-box.machine { border-left-color: var(--accent-machine); }
+        .score-box span { font-size: 0.95rem; font-weight: bold; }
+        .score-box .points { font-size: 1.4rem; }
+
+        /* Painel de Perguntas */
+        .quiz-panel {
+            background-color: var(--panel-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 290px;
+            border: 2px solid #232329;
+        }
+
+        .quiz-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #a1a1aa;
+            border-bottom: 1px solid #27272c;
+            padding-bottom: 6px;
+            margin-bottom: 12px;
+        }
+
+        .quiz-question {
+            font-size: 1.25rem;
+            font-weight: 600;
+            line-height: 1.35;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        @media(min-width: 768px) {
+            .options-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .opt-btn {
+            background-color: #202026;
+            color: #f1f1f6;
+            border: 2px solid #32323b;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+
+        .opt-btn:hover:not(:disabled) {
+            background-color: #2d2d35;
+            border-color: var(--warning);
+        }
+
+        .opt-btn.correct {
+            background-color: var(--accent-human) !important;
+            border-color: #fff !important;
+            color: #000 !important;
+            font-weight: bold;
+        }
+
+        .opt-btn.incorrect {
+            background-color: var(--accent-machine) !important;
+            border-color: #fff !important;
+            color: #fff !important;
+        }
+
+        .quiz-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+        }
+
+        .feedback-text {
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .btn-next {
+            background-color: var(--warning);
+            color: #121214;
+            border: none;
+            padding: 8px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-next:hover { opacity: 0.9; }
+
+        /* Modal Fim de Jogo */
+        .winner-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-card {
+            background: var(--panel-bg);
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 480px;
+            width: 90%;
+            border: 4px solid var(--warning);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        .modal-card h2 {
+            font-size: 2rem;
+            margin-bottom: 12px;
+            color: var(--warning);
+        }
+
+        .modal-card p {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: #d4d4d8;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Alternador de Visão (Computador/TV vs Celular) -->
+    <div class="device-toggle-bar">
+        <span style="font-size: 0.85rem; color: #a1a1aa;">Modo de Visualização:</span>
+        <button class="device-btn active" id="btn-tv" onclick="setDeviceView('tv')">🖥️ Tela Cheia / TV</button>
+        <button class="device-btn" id="btn-mobile" onclick="setDeviceView('mobile')">📱 Visão Celular</button>
+    </div>
+
+    <div class="container" id="main-container">
+        <header>
+            <h1>The Steel Challenge</h1>
+            <p>John Henry vs. Steam Drill — Past Tense Quiz</p>
+        </header>
+
+        <!-- Pista de Trilhos -->
+        <div class="railroad-arena">
+            <div class="arena-header">
+                <span>Tunnel Race</span>
+                <span>Finish Line ⛰️</span>
+            </div>
+
+            <!-- Trilha John Henry (Trabalhador Negro com Martelo) -->
+            <div class="track-row">
+                <div class="rails-bed"></div>
+                <div class="rail-line-top"></div>
+                <div class="rail-line-bottom"></div>
+                <div class="finish-gate"></div>
+                
+                <div class="racer-token human-token" id="token-human" style="left: 5%;">
+                    <!-- Imagem histórica real representando John Henry -->
+                    <img src="john-henry.gif" alt="John Henry">
+                    <div class="racer-info">
+                        <span class="racer-name">John Henry</span>
+                        <span class="racer-score-tag"><span id="pos-human-pts">0</span> pts</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trilha Máquina a Vapor (Colocadora de estribos/perfuradora) -->
+            <div class="track-row">
+                <div class="rails-bed"></div>
+                <div class="rail-line-top"></div>
+                <div class="rail-line-bottom"></div>
+                <div class="finish-gate"></div>
+                
+                <div class="racer-token machine-token" id="token-machine" style="left: 5%;">
+                    <!-- Imagem de máquina perfuradora a vapor da época -->
+                    <img src="maquina.gif" alt="Steam Drill">
+                    <div class="racer-info">
+                        <span class="racer-name">Steam Drill</span>
+                        <span class="racer-score-tag"><span id="pos-machine-pts">0</span> pts</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Placar -->
+        <div class="scoreboard-bar">
+            <div class="score-box human">
+                <span>👷‍♂️ Team Human</span>
+                <span class="points" id="score-human-num">0</span>
+            </div>
+            <div class="score-box machine">
+                <span>🚂 Team Machine</span>
+                <span class="points" id="score-machine-num">0</span>
+            </div>
+        </div>
+
+        <!-- Painel de Perguntas -->
+        <div class="quiz-panel">
+            <div>
+                <div class="quiz-meta">
+                    <span id="q-counter">Question 1 of 6</span>
+                    <span id="q-level">Level: Warm-up</span>
+                </div>
+                <div class="quiz-question" id="q-text">
+                    Carregando pergunta...
+                </div>
+            </div>
+
+            <div class="options-grid" id="options-container"></div>
+
+            <div class="quiz-footer">
+                <div class="feedback-text" id="feedback-display"></div>
+                <button class="btn-next" id="btn-next-q" onclick="advanceQuestion()" style="display: none;">Próxima ➔</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Vitória -->
+    <div class="winner-modal" id="winner-modal">
+        <div class="modal-card">
+            <h2 id="modal-title">Fim do Desafio!</h2>
+            <p id="modal-desc">O resultado da competição foi definido.</p>
+            <button class="btn-next" onclick="restartGame()">Reiniciar Desafio</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                level: "Nível 1: Aquecimento",
+                text: "Qual é o passado correto (Simple Past) do verbo regular <i>work</i> na frase:<br><b>'John Henry ______ for the railroad.'</b>",
+                options: [
+                    { text: "a) working", correct: false },
+                    { text: "b) worked", correct: true },
+                    { text: "c) works", correct: false },
+                    { text: "d) workd", correct: false }
+                ]
+            },
+            {
+                level: "Nível 1: Aquecimento",
+                text: "Qual é a forma correta no passado do verbo irregular <i>come</i> na frase:<br><b>'A salesman ______ to the camp.'</b>",
+                options: [
+                    { text: "a) comed", correct: false },
+                    { text: "b) camed", correct: false },
+                    { text: "c) came", correct: true },
+                    { text: "d) coming", correct: false }
+                ]
+            },
+            {
+                level: "Nível 2: Intermediário",
+                text: "Complete a lacuna com a forma correta do verbo <i>to be</i> no passado:<br><b>'John Henry and Polly Ann ______ strong workers.'</b>",
+                options: [
+                    { text: "a) was", correct: false },
+                    { text: "b) is", correct: false },
+                    { text: "c) were", correct: true },
+                    { text: "d) are", correct: false }
+                ]
+            },
+            {
+                level: "Nível 2: Intermediário",
+                text: "Transforme a frase para o Simple Past:<br><b>'The machine drills the mountain.'</b>",
+                options: [
+                    { text: "a) The machine drill the mountain.", correct: false },
+                    { text: "b) The machine drilled the mountain.", correct: true },
+                    { text: "c) The machine drulling the mountain.", correct: false },
+                    { text: "d) The machine was drill the mountain.", correct: false }
+                ]
+            },
+            {
+                level: "Nível 3: Desafio Avançado",
+                text: "Identifique a correção ideal em Simple Past para a frase:<br><b>'John Henry win the race, but he die after.'</b>",
+                options: [
+                    { text: "a) John Henry won the race, but he died after.", correct: true },
+                    { text: "b) John Henry wined the race, but he dieded after.", correct: false },
+                    { text: "c) John Henry won the race, but he dying after.", correct: false },
+                    { text: "d) John Henry wins the race, but he dies after.", correct: false }
+                ]
+            },
+            {
+                level: "Nível 3: Desafio Final (Past Continuous)",
+                text: "Como se traduz/constrói corretamente a frase:<br><b>'Enquanto a máquina estava perfurando, John Henry estava batendo com o martelo.'</b>",
+                options: [
+                    { text: "a) While the machine drilled, John Henry hammered.", correct: false },
+                    { text: "b) While the machine was drilling, John Henry was hammering.", correct: true },
+                    { text: "c) While the machine is drilling, John Henry is hammering.", correct: false },
+                    { text: "d) While the machine were drilling, John Henry was hammer.", correct: false }
+                ]
+            }
+        ];
+
+        let currentIndex = 0;
+        let pointsHuman = 0;
+        let pointsMachine = 0;
+        let answeredCurrent = false;
+        const maxTotalScore = questions.length * 10;
+
+        const tokenHuman = document.getElementById("token-human");
+        const tokenMachine = document.getElementById("token-machine");
+        const posHumanPts = document.getElementById("pos-human-pts");
+        const posMachinePts = document.getElementById("pos-machine-pts");
+        const scoreHumanNum = document.getElementById("score-human-num");
+        const scoreMachineNum = document.getElementById("score-machine-num");
+
+        const qCounter = document.getElementById("q-counter");
+        const qLevel = document.getElementById("q-level");
+        const qText = document.getElementById("q-text");
+        const optionsContainer = document.getElementById("options-container");
+        const feedbackDisplay = document.getElementById("feedback-display");
+        const btnNextQ = document.getElementById("btn-next-q");
+
+        const winnerModal = document.getElementById("winner-modal");
+        const modalTitle = document.getElementById("modal-title");
+        const modalDesc = document.getElementById("modal-desc");
+
+        function setDeviceView(mode) {
+            const container = document.getElementById("main-container");
+            const btnTv = document.getElementById("btn-tv");
+            const btnMobile = document.getElementById("btn-mobile");
+
+            if (mode === 'mobile') {
+                container.classList.add("mobile-view");
+                btnMobile.classList.add("active");
+                btnTv.classList.remove("active");
+            } else {
+                container.classList.remove("mobile-view");
+                btnTv.classList.add("active");
+                btnMobile.classList.remove("active");
+            }
+        }
+
+        function updateRailroadTracks() {
+            const humanPct = 5 + (pointsHuman / maxTotalScore) * 75;
+            const machinePct = 5 + (pointsMachine / maxTotalScore) * 75;
+
+            tokenHuman.style.left = humanPct + "%";
+            tokenMachine.style.left = machinePct + "%";
+
+            posHumanPts.textContent = pointsHuman;
+            posMachinePts.textContent = pointsMachine;
+            scoreHumanNum.textContent = pointsHuman;
+            scoreMachineNum.textContent = pointsMachine;
+        }
+
+        function loadQuizQuestion() {
+            answeredCurrent = false;
+            feedbackDisplay.textContent = "";
+            btnNextQ.style.display = "none";
+            tokenHuman.classList.remove("active-action");
+            tokenMachine.classList.remove("active-action");
+
+            const currentQ = questions[currentIndex];
+            qCounter.textContent = `Question ${currentIndex + 1} of ${questions.length}`;
+            qLevel.textContent = currentQ.level;
+            qText.innerHTML = currentQ.text;
+
+            optionsContainer.innerHTML = "";
+            currentQ.options.forEach(opt => {
+                const button = document.createElement("button");
+                button.className = "opt-btn";
+                button.textContent = opt.text;
+                button.onclick = () => handleAnswerSelection(opt.correct, button);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function handleAnswerSelection(isCorrect, selectedButton) {
+            if (answeredCurrent) return;
+            answeredCurrent = true;
+
+            const allButtons = optionsContainer.getElementsByClassName("opt-btn");
+            const currentQ = questions[currentIndex];
+
+            Array.from(allButtons).forEach(btn => {
+                btn.disabled = true;
+                const matchObj = currentQ.options.find(o => o.text === btn.textContent);
+                if (matchObj.correct) {
+                    btn.classList.add("correct");
+                } else if (btn === selectedButton && !isCorrect) {
+                    btn.classList.add("incorrect");
+                }
+            });
+
+            if (isCorrect) {
+                pointsHuman += 10;
+                feedbackDisplay.style.color = "var(--accent-human)";
+                feedbackDisplay.textContent = "✔ Correto! John Henry bateu forte!";
+                tokenHuman.classList.add("active-action"); // Ativa animação de martelada
+            } else {
+                pointsMachine += 10;
+                feedbackDisplay.style.color = "var(--accent-machine)";
+                feedbackDisplay.textContent = "✖ Incorreto! A máquina avançou.";
+                tokenMachine.classList.add("active-action"); // Ativa animação da máquina
+            }
+
+            updateRailroadTracks();
+
+            if (currentIndex < questions.length - 1) {
+                btnNextQ.style.display = "block";
+            } else {
+                setTimeout(displayWinnerModal, 2000);
+            }
+        }
+
+        function advanceQuestion() {
+            currentIndex++;
+            loadQuizQuestion();
+        }
+
+        function displayWinnerModal() {
+            winnerModal.style.display = "flex";
+            if (pointsHuman > pointsMachine) {
+                modalTitle.textContent = "Victory for John Henry!";
+                modalDesc.textContent = `A equipe humana venceu com ${pointsHuman} pontos contra ${pointsMachine} da máquina!`;
+            } else if (pointsMachine > pointsHuman) {
+                modalTitle.textContent = "The Machine Won!";
+                modalDesc.textContent = `A máquina a vapor liderou com ${pointsMachine} pontos contra ${pointsHuman}.`;
+            } else {
+                modalTitle.textContent = "Empate Histórico!";
+                modalDesc.textContent = `Terminou empatado em ${pointsHuman} pontos exatos!`;
+            }
+        }
+
+        function restartGame() {
+            currentIndex = 0;
+            pointsHuman = 0;
+            pointsMachine = 0;
+            winnerModal.style.display = "none";
+            updateRailroadTracks();
+            loadQuizQuestion();
+        }
+
+        updateRailroadTracks();
+        loadQuizQuestion();
+    </script>
+</body>
+</html>
